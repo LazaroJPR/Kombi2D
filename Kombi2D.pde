@@ -1,5 +1,26 @@
+import processing.sound.*;
+
 final int h_side = 500;
 final int v_side = 500;
+
+final int dx_Limp = 2;
+final float dy_Retro = 0.15;
+final float dx_Haste = 0.15;
+final float dy_Haste = 0.3;
+
+int switch_Farol = 0;
+int switch_PiscaEsq = 0;
+int switch_PiscaDir = 0;
+int switch_Alerta = 0;
+int switch_Retrovisor = 0;
+int switch_Limpador = 0;
+
+int temp_PiscaEsq = 0;
+int temp_PiscaDir = 0;
+int temp_Alerta = 0;
+
+int direcaoEsq = 0;
+int direcaoDir = 0;
 
 color white = color(255, 255, 255);
 color almost_white = color(230, 230, 230);
@@ -58,10 +79,75 @@ int d_farolG = 72;
 int heig_listra = 8;
 int heig_listG = 3*heig_listra/2;
 
+SoundFile motor;
+
 void setup(){
   size(500, 500);
   frameRate(60);
+  motor = new SoundFile(this, "MotorSound.mp3");
 }
+
+void keyTyped(){
+  if(key == 'F' || key == 'f'){
+    if(switch_Farol == 1) switch_Farol = 0;
+    else switch_Farol = 1;
+  }
+  
+  if(key == 'R' || key == 'r'){
+    if(switch_Retrovisor == 1) switch_Retrovisor = 0;
+    else switch_Retrovisor = 1;
+  }
+  
+  if(key == 'L' || key == 'l'){
+    if(switch_Limpador == 1) switch_Limpador = 0;
+    else switch_Limpador = 1;
+  }
+  
+  if(key == '4'){
+    temp_PiscaEsq = millis();
+    if(switch_PiscaEsq == 1){ 
+      switch_PiscaEsq = 0;
+    }
+    else{ 
+      switch_PiscaDir = 0;
+      switch_Alerta = 0;
+      switch_PiscaEsq = 1;
+    }  
+  }
+  
+  if(key == '6'){
+    temp_PiscaDir = millis();
+    if(switch_PiscaDir == 1){
+      switch_PiscaDir = 0;
+    }
+    else{
+      switch_PiscaEsq = 0;
+      switch_Alerta = 0;
+      switch_PiscaDir = 1;
+    }  
+  }
+  
+  if(key == 'a' || key == 'A'){
+    temp_Alerta = millis();
+    if(switch_Alerta == 1){
+      switch_Alerta = 0;
+    }
+    else{
+      switch_PiscaDir = 0;
+      switch_PiscaEsq = 0;
+      switch_Alerta = 1;
+    }  
+  }
+  
+  if(key == 'm' || key == 'M'){
+    motor.play();
+  }
+}
+
+Limpador limpaEsq = new Limpador(240);
+Limpador limpaDir = new Limpador(240);
+Retrovisor retro = new Retrovisor(0);
+Haste haste = new Haste(0, 0);
 
 void draw(){
   background(255-(0.25*mouseX), 150, 150+(0.25*mouseY));
@@ -173,20 +259,20 @@ void draw(){
   //Linhas de reflexo janela da esquerda
   pushMatrix();
   LinhaReflexo linhaSupEsq = new LinhaReflexo();
-  linhaSupEsq.display();
+  if(switch_Limpador == 0 && limpaEsq.getLimpX() == 240) linhaSupEsq.display();
   translate(115,85);
   LinhaReflexo linhaInfEsq = new LinhaReflexo();
-  linhaInfEsq.display();
+  if(switch_Limpador == 0 && limpaEsq.getLimpX() == 240) linhaInfEsq.display();
   popMatrix();
   
   //Linhas de reflexo janela da direita
   pushMatrix();
   translate(160,0);
   LinhaReflexo linhaSupDir = new LinhaReflexo();
-  linhaSupDir.display();
+  if(switch_Limpador == 0 && limpaEsq.getLimpX() == 240) linhaSupDir.display();
   translate(115,85);
   LinhaReflexo linhaInfDir = new LinhaReflexo();
-  linhaInfDir.display();
+  if(switch_Limpador == 0 && limpaEsq.getLimpX() == 240) linhaInfDir.display();
   popMatrix();
   
 //--------------------------------------------------------
@@ -197,25 +283,37 @@ void draw(){
   pushMatrix();
   stroke(black);
   fill(gray);
-  if((keyPressed == true) && ((key == 'L') || (key == 'l'))){
-      circle(60, 140, wid_retrovisor);
+  if(switch_Retrovisor == 1){
+    if(retro.getRetroY() <= 10)
+       retro.move(1);
   }
-  else circle(50, 130, wid_retrovisor);
+  else{
+    if(retro.getRetroY() > 0)
+       retro.move(2);
+  }
+  retro.display();
   
   translate(2*wid_lataria, 0);
-  if((keyPressed == true) && ((key == 'L') || (key == 'l'))){
-      circle(40, 140, wid_retrovisor);
+  if(switch_Retrovisor == 1){
+    if(retro.getRetroY() <= 10)
+       retro.move(1);
   }
-  else circle(50, 130, wid_retrovisor);
+  else{
+    if(retro.getRetroY() > 0)
+       retro.move(2);
+  }
+  retro.display();
   popMatrix();
   
-  //Hastes
-  quad(45, 130, 55, 130, 90, 160, 80, 160);
-  quad(445, 130, 455, 130, 420, 160, 410, 160);
-  
-  stroke(gray);
-  line(44, 130, 56, 130);
-  line(445, 130, 456, 130);
+  if(switch_Retrovisor == 1){
+    if(retro.getRetroY() <= 10)
+       haste.move(1);
+    }
+  else{
+    if(retro.getRetroY() > 0)
+       haste.move(2);
+  }
+  haste.display();
 //--------------------------------------------------------
 
 //Limpadores de Parabrisa
@@ -223,16 +321,43 @@ void draw(){
   pushMatrix();
   stroke(black);
   fill(gray);
-  ellipse(240, 110, wid_limpador, heig_limpador);
-  translate(20,0);
-  ellipse(240, 110, wid_limpador, heig_limpador);
-  popMatrix();
-  quad(238, 116, 240, 110, 190, 170, 195, 170);
-  quad(258, 110, 260, 116, 305, 170, 310, 170);
   
-  stroke(gray);
-  line(190, 170, 195, 170);
-  line(305, 170, 310, 170);
+  if(switch_Limpador == 1){
+    if(limpaEsq.getLimpX() <= 240 && limpaEsq.getLimpX() >= 104 && direcaoEsq == 0){
+       limpaEsq.move(2);
+       if(limpaEsq.getLimpX() == 104) direcaoEsq = 1;
+    }
+    else{
+      limpaEsq.move(1);
+      if(limpaEsq.getLimpX() == 240) direcaoEsq = 0;
+    }
+  }
+  else if (switch_Limpador == 0 && limpaEsq.getLimpX() != 240){
+    if(limpaEsq.getLimpX() <= 240 && limpaEsq.getLimpX() >= 104 && direcaoEsq == 0){
+       limpaEsq.move(2);
+       if(limpaEsq.getLimpX() == 104) direcaoEsq = 1;
+    }
+    else{
+      limpaEsq.move(1);
+    }
+  }
+  else direcaoEsq = 0;
+  limpaEsq.display();
+  
+  stroke(black);
+  translate(wid_janela+10, 0);
+  if(switch_Limpador == 1){
+    if(limpaDir.getLimpX() <= 240 && limpaDir.getLimpX() >= 104 && direcaoDir == 0){
+       limpaDir.move(2);
+       if(limpaDir.getLimpX() == 104) direcaoDir = 1;
+    }
+    else{
+      limpaDir.move(1);
+      if(limpaDir.getLimpX() == 240) direcaoDir = 0;
+    }
+  }
+  limpaEsq.display();
+  popMatrix();
 //--------------------------------------------------------
 
 //Farois frontais
@@ -241,27 +366,29 @@ void draw(){
   pushMatrix();
   translate(110, 225);
   Pisca piscaEsq = new Pisca();
-  if((keyPressed == true) && ((key == '4') || (key == 'a') || (key == 'A'))) piscaEsq.piscar(1);
+  if(switch_PiscaEsq == 1) piscaEsq.piscar(1, millis(), 1);
+  if(switch_Alerta == 1) piscaEsq.piscar(1, millis(), 3);
   piscaEsq.display();
   
   //Pisca direito
   translate(280, 0);
   Pisca piscaDir = new Pisca();
-  if((keyPressed == true) && ((key == '6') || (key == 'a') || (key == 'A'))) piscaDir.piscar(1);
+  if(switch_PiscaDir == 1) piscaDir.piscar(1, millis(), 2);
+  if(switch_Alerta == 1) piscaDir.piscar(1, millis(), 4);
   piscaDir.display();
   popMatrix();
   
-  //Farois
+  //Farol esquerdo
   pushMatrix();
   translate(140, 300);
   Farol farolEsq = new Farol();
-  if((keyPressed == true) && ((key == 'F') || (key == 'f'))) farolEsq.ligar();
+  if(switch_Farol == 1) farolEsq.ligar();
   farolEsq.display();
 
   //Farol direito
   translate(220, 0);
   Farol farolDir = new Farol();
-  if((keyPressed == true) && ((key == 'F') || (key == 'f')))farolDir.ligar();
+  if(switch_Farol == 1) farolDir.ligar();
   farolDir.display();
   popMatrix();
 //--------------------------------------------------------
@@ -291,8 +418,98 @@ void draw(){
   rect(-wid_placa/2, -11, wid_placa-1, heig_placa);
   popMatrix();
 //--------------------------------------------------------
+  float amplitude;
+  if(mouseX <= 100)
+    amplitude = map(mouseX, 0, 100, 0.4, 0.2);
+  else if(mouseX >= 400)
+    amplitude = map(mouseX, 400, width, 0.2, 0.4);
+  else
+    amplitude = 0.2;
+  motor.amp(amplitude);
+}
+
+class Haste{
+  float x, y;
   
-  save("Kombi2D.png");
+  Haste(float new_x, float new_y){
+    x = new_x;
+    y = new_y;
+  }
+  
+  void move(int escolha){
+    if(escolha == 1){
+      x += dx_Haste;
+      y += dy_Haste;
+    }
+    else{
+      x -= dx_Haste;
+      y -= dy_Haste;
+    }
+  }
+  
+  void display(){
+    quad(45-x, 130+y, 55-x, 130+y, 90, 160, 80, 160);
+    quad(445+x, 130+y, 455+x, 130+y, 420, 160, 410, 160);
+    
+    stroke(gray);
+    line(44, 130+y, 56-x, 130+y);
+    line(445+x, 130+y, 456, 130+y);
+  } 
+  
+}
+
+class Retrovisor{
+  float y;
+  
+  Retrovisor(float new_y){
+    y = new_y;
+  }
+  
+  float getRetroY(){
+    return y;
+  }
+  
+  void move(int escolha){
+    if(escolha == 1){
+      y += dy_Retro;
+    }
+    else{
+      y -= dy_Retro;
+    }
+  }
+  
+  void display(){
+    stroke(black);
+    ellipse(50, 130+y, wid_retrovisor-y, wid_retrovisor);
+  } 
+}
+
+class Limpador{
+  int x;
+  
+  Limpador(int new_x){
+    x = new_x;
+  }
+  
+  int getLimpX(){
+    return x;
+  }
+  
+  void move(int escolha){
+    if(escolha == 1){
+      x += dx_Limp;
+    }
+    else{
+      x -= dx_Limp;
+    }
+  }
+  
+  void display(){
+    ellipse(x, 110, wid_limpador, heig_limpador);
+    quad(x-2, 116, x, 110, 170, 170, 175, 170);
+    stroke(gray);
+    line(170, 170, 175, 170);
+  } 
 }
 
 class Roda{  
@@ -324,8 +541,21 @@ class Pisca{
    cor = orange;
   }
   
-  void piscar(int resp){
-    if (resp == 1) cor = light_orange;
+  void piscar(int resp, int temp, int escolha){
+    if (resp == 1){ 
+      if(escolha == 1 && (temp - temp_PiscaEsq)%1000 <= 500){ 
+        cor = light_orange;
+      }
+      if(escolha == 2 && (temp - temp_PiscaEsq)%1000 <= 500){ 
+        cor = light_orange;
+      }
+      if(escolha == 3 && (temp - temp_Alerta)%1000 <= 500){ 
+        cor = light_orange;
+      }
+      if(escolha == 4 && (temp - temp_Alerta)%1000 <= 500){ 
+        cor = light_orange;
+      }
+    }
     else cor = orange;
   }
   
@@ -358,6 +588,11 @@ class Farol{
   void ligar(){
     corCircMaior = almost_white;
     corCircMenor = white;
+  }
+  
+  void desligar(){
+    corCircMaior = black;
+    corCircMenor =  gray;
   }
   
   void display(){

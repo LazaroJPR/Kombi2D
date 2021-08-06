@@ -79,14 +79,19 @@ int d_farolG = 72;
 int heig_listra = 8;
 int heig_listG = 3*heig_listra/2;
 
-SoundFile motor;
+SoundFile motor, buzina, seta, limpador;
 
 void setup(){
   size(500, 500);
   frameRate(60);
   motor = new SoundFile(this, "MotorSound.mp3");
+  buzina = new SoundFile(this, "HornSound.mp3");
+  seta = new SoundFile(this, "SetaSound.mp3");
+  limpador = new SoundFile(this, "LimpadorSound.mp3");
 }
 
+//Funcao que verifica qual tecla foi pressionada
+//--------------------------------------------------------
 void keyTyped(){
   if(key == 'F' || key == 'f'){
     if(switch_Farol == 1) switch_Farol = 0;
@@ -99,14 +104,20 @@ void keyTyped(){
   }
   
   if(key == 'L' || key == 'l'){
-    if(switch_Limpador == 1) switch_Limpador = 0;
+    limpador.loop();
+    if(switch_Limpador == 1){
+      switch_Limpador = 0;
+      limpador.pause();
+    }
     else switch_Limpador = 1;
   }
   
   if(key == '4'){
+    seta.loop();
     temp_PiscaEsq = millis();
     if(switch_PiscaEsq == 1){ 
       switch_PiscaEsq = 0;
+      seta.pause();
     }
     else{ 
       switch_PiscaDir = 0;
@@ -116,9 +127,11 @@ void keyTyped(){
   }
   
   if(key == '6'){
+    seta.loop();
     temp_PiscaDir = millis();
     if(switch_PiscaDir == 1){
       switch_PiscaDir = 0;
+      seta.pause();
     }
     else{
       switch_PiscaEsq = 0;
@@ -128,9 +141,11 @@ void keyTyped(){
   }
   
   if(key == 'a' || key == 'A'){
+    seta.loop();
     temp_Alerta = millis();
     if(switch_Alerta == 1){
       switch_Alerta = 0;
+      seta.pause();
     }
     else{
       switch_PiscaDir = 0;
@@ -142,7 +157,12 @@ void keyTyped(){
   if(key == 'm' || key == 'M'){
     motor.play();
   }
+  
+  if(key == 'b' || key == 'B'){
+    buzina.play();
+  }
 }
+//--------------------------------------------------------
 
 Limpador limpaEsq = new Limpador(240);
 Limpador limpaDir = new Limpador(240);
@@ -418,6 +438,9 @@ void draw(){
   rect(-wid_placa/2, -11, wid_placa-1, heig_placa);
   popMatrix();
 //--------------------------------------------------------
+
+//Volume do som do motor do carro
+//--------------------------------------------------------
   float amplitude;
   if(mouseX <= 100)
     amplitude = map(mouseX, 0, 100, 0.4, 0.2);
@@ -426,8 +449,11 @@ void draw(){
   else
     amplitude = 0.2;
   motor.amp(amplitude);
+//--------------------------------------------------------
 }
 
+//Classe haste do retrovisor
+//--------------------------------------------------------
 class Haste{
   float x, y;
   
@@ -455,9 +481,11 @@ class Haste{
     line(44, 130+y, 56-x, 130+y);
     line(445+x, 130+y, 456, 130+y);
   } 
-  
 }
+//--------------------------------------------------------
 
+//Classe retrovisor
+//--------------------------------------------------------
 class Retrovisor{
   float y;
   
@@ -483,7 +511,10 @@ class Retrovisor{
     ellipse(50, 130+y, wid_retrovisor-y, wid_retrovisor);
   } 
 }
+//--------------------------------------------------------
 
+//Classe limpador de parabrisa
+//--------------------------------------------------------
 class Limpador{
   int x;
   
@@ -511,7 +542,10 @@ class Limpador{
     line(170, 170, 175, 170);
   } 
 }
+//--------------------------------------------------------
 
+//Classe roda
+//--------------------------------------------------------
 class Roda{  
     Roda(){
     }
@@ -522,7 +556,10 @@ class Roda{
       rect(0, 0, wid_roda, heig_roda, 0, 0, 12, 12);
     }
   }
-  
+//--------------------------------------------------------
+
+//Classe Reflexo do vidro
+//-------------------------------------------------------- 
 class LinhaReflexo{
     LinhaReflexo(){
     }
@@ -533,7 +570,10 @@ class LinhaReflexo{
       line(120, 67, 113, 78);
     }
   }
+//--------------------------------------------------------
 
+//Classe pisca
+//--------------------------------------------------------
 class Pisca{
   color cor;
   
@@ -576,7 +616,10 @@ class Pisca{
     circle(0, 0, d_farolP-6);
   }
 }
+//--------------------------------------------------------
 
+//Classe farol
+//--------------------------------------------------------
 class Farol{
   color corCircMaior, corCircMenor;
   
@@ -596,7 +639,6 @@ class Farol{
   }
   
   void display(){
-    
     fill(white, 150);
     circle(14, -6, 13);
     
@@ -613,3 +655,4 @@ class Farol{
     circle(0, 0, 27);
   }
 }
+//--------------------------------------------------------

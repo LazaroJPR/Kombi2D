@@ -3,22 +3,27 @@ import processing.sound.*;
 final int h_side = 500;
 final int v_side = 500;
 
-final int dx_Limp = 2;
+//Variação por pixel de cada movimentação, seja de limpador de parabrisa, seja do retrovisor
+final float dx_Limp = 2;
 final float dy_Retro = 0.15;
 final float dx_Haste = 0.15;
 final float dy_Haste = 0.3;
 
+//Variáveis que funcionam como interruptores, guardam a informação caso alguma função esteja ativada ou desativada
 int switch_Farol = 0;
 int switch_PiscaEsq = 0;
 int switch_PiscaDir = 0;
 int switch_Alerta = 0;
 int switch_Retrovisor = 0;
 int switch_Limpador = 0;
+int switch_Motor = 0;
 
+//Tempo guardado para quando for ativada cada instrução, como um pisca-alerta ou ligar a seta pela esquerda ou direita
 int temp_PiscaEsq = 0;
 int temp_PiscaDir = 0;
 int temp_Alerta = 0;
 
+//Guardam a direção do movimento do parabrisa, seja para esquerda ou pela direita
 int direcaoEsq = 0;
 int direcaoDir = 0;
 
@@ -79,18 +84,21 @@ int d_farolG = 72;
 int heig_listra = 8;
 int heig_listG = 3*heig_listra/2;
 
-SoundFile motor, buzina, seta, limpador;
+//Arquivos de som utilizados para motor, buzina, as setas, o pisca-alerta e o limpador de para-brisa
+SoundFile motorInicio, motorLoop, motorFinal, buzina, seta, limpador;
 
 void setup(){
   size(500, 500);
   frameRate(60);
-  motor = new SoundFile(this, "MotorSound.mp3");
+  motorInicio = new SoundFile(this, "MotorSound_inicio.mp3");
+  motorLoop = new SoundFile(this, "MotorSound_loop.mp3");
+  motorFinal = new SoundFile(this, "MotorSound_final.mp3");
   buzina = new SoundFile(this, "HornSound.mp3");
   seta = new SoundFile(this, "SetaSound.mp3");
   limpador = new SoundFile(this, "LimpadorSound.mp3");
 }
 
-//Funcao que verifica qual tecla foi pressionada
+//Funcao que é ativada a cada tecla ativada pelo teclado e em seu interior, serão feitas análises para cada instrução
 //--------------------------------------------------------
 void keyTyped(){
   if(key == 'F' || key == 'f'){
@@ -107,7 +115,6 @@ void keyTyped(){
     limpador.loop();
     if(switch_Limpador == 1){
       switch_Limpador = 0;
-      limpador.pause();
     }
     else switch_Limpador = 1;
   }
@@ -155,15 +162,27 @@ void keyTyped(){
   }
   
   if(key == 'm' || key == 'M'){
-    motor.play();
+    if(switch_Motor == 1){
+      if(motorInicio.isPlaying()){
+        motorInicio.pause();
+      }
+      motorFinal.play();
+      temp_Sound = 1;
+      switch_Motor = 0;
+    }
+    else{
+      motorInicio.play();
+      temp_Sound = 0;
+      switch_Motor = 1;  
+    }
   }
-  
   if(key == 'b' || key == 'B'){
     buzina.play();
   }
 }
 //--------------------------------------------------------
 
+//Variáveis declaradas para o uso das classes de cada peça da kombi que possuam movimentação em suas animações
 Limpador limpaEsq = new Limpador(240);
 Limpador limpaDir = new Limpador(240);
 Retrovisor retro = new Retrovisor(0);
@@ -304,33 +323,33 @@ void draw(){
   stroke(black);
   fill(gray);
   if(switch_Retrovisor == 1){
-    if(retro.getRetroY() <= 10)
+    if(retro.getRetroY() <= 10)    //Movimento de subida do retrovisor
        retro.move(1);
   }
   else{
-    if(retro.getRetroY() > 0)
+    if(retro.getRetroY() > 0)      //Movimento de descida do retrovisor
        retro.move(2);
   }
   retro.display();
   
   translate(2*wid_lataria, 0);
   if(switch_Retrovisor == 1){
-    if(retro.getRetroY() <= 10)
+    if(retro.getRetroY() <= 10)    //Movimento de subida do retrovisor
        retro.move(1);
   }
   else{
-    if(retro.getRetroY() > 0)
+    if(retro.getRetroY() > 0)      //Movimento de descida do retrovisor
        retro.move(2);
   }
   retro.display();
   popMatrix();
   
   if(switch_Retrovisor == 1){
-    if(retro.getRetroY() <= 10)
+    if(retro.getRetroY() <= 10)     //Movimento de subida da haste do retrovisor
        haste.move(1);
     }
   else{
-    if(retro.getRetroY() > 0)
+    if(retro.getRetroY() > 0)       //Movimento de descida da haste do retrovisor
        haste.move(2);
   }
   haste.display();
@@ -361,7 +380,10 @@ void draw(){
       limpaEsq.move(1);
     }
   }
-  else direcaoEsq = 0;
+  else{
+    direcaoEsq = 0;
+    if(limpador.isPlaying()) limpador.pause();  
+  }
   limpaEsq.display();
   
   stroke(black);
@@ -448,11 +470,13 @@ void draw(){
     amplitude = map(mouseX, 400, width, 0.2, 0.4);
   else
     amplitude = 0.2;
-  motor.amp(amplitude);
-//--------------------------------------------------------
+    
+  motorInicio.amp(amplitude);
+  motorLoop.amp(amplitude);
+  motorFinal.amp(0.4);
 }
-
-//Classe haste do retrovisor
+//--------------------------------------------------------
+//Classe responsável pela haste do retrovisor e sua movimentação
 //--------------------------------------------------------
 class Haste{
   float x, y;
@@ -484,7 +508,7 @@ class Haste{
 }
 //--------------------------------------------------------
 
-//Classe retrovisor
+//Classe responsável pelo retrovisor e sua movimentação
 //--------------------------------------------------------
 class Retrovisor{
   float y;
@@ -513,16 +537,16 @@ class Retrovisor{
 }
 //--------------------------------------------------------
 
-//Classe limpador de parabrisa
+//Classe responsável pelo limpador de parabrisa e sua movimentação
 //--------------------------------------------------------
 class Limpador{
-  int x;
+  float x;
   
-  Limpador(int new_x){
+  Limpador(float new_x){
     x = new_x;
   }
   
-  int getLimpX(){
+  float getLimpX(){
     return x;
   }
   
@@ -544,7 +568,7 @@ class Limpador{
 }
 //--------------------------------------------------------
 
-//Classe roda
+//Classe responsável pelo desenho de cada roda
 //--------------------------------------------------------
 class Roda{  
     Roda(){
@@ -558,7 +582,7 @@ class Roda{
   }
 //--------------------------------------------------------
 
-//Classe Reflexo do vidro
+//Classe responsável pelas linhas de reflexo do vidro
 //-------------------------------------------------------- 
 class LinhaReflexo{
     LinhaReflexo(){
@@ -572,7 +596,7 @@ class LinhaReflexo{
   }
 //--------------------------------------------------------
 
-//Classe pisca
+//Classe responsável pelo pisca-alerta e as setas de comando da kombi, além de sua animação quando ativadas
 //--------------------------------------------------------
 class Pisca{
   color cor;
@@ -583,16 +607,16 @@ class Pisca{
   
   void piscar(int resp, int temp, int escolha){
     if (resp == 1){ 
-      if(escolha == 1 && (temp - temp_PiscaEsq)%1000 <= 500){ 
+      if(escolha == 1 && (temp - temp_PiscaEsq)%950 <= 475){ 
         cor = light_orange;
       }
-      if(escolha == 2 && (temp - temp_PiscaEsq)%1000 <= 500){ 
+      if(escolha == 2 && (temp - temp_PiscaEsq)%950 <= 475){ 
         cor = light_orange;
       }
-      if(escolha == 3 && (temp - temp_Alerta)%1000 <= 500){ 
+      if(escolha == 3 && (temp - temp_Alerta)%950 <= 475){ 
         cor = light_orange;
       }
-      if(escolha == 4 && (temp - temp_Alerta)%1000 <= 500){ 
+      if(escolha == 4 && (temp - temp_Alerta)%950 <= 475){ 
         cor = light_orange;
       }
     }
@@ -618,7 +642,7 @@ class Pisca{
 }
 //--------------------------------------------------------
 
-//Classe farol
+//Classe responsável pelos faróis e sua animação de ligar e desligar
 //--------------------------------------------------------
 class Farol{
   color corCircMaior, corCircMenor;

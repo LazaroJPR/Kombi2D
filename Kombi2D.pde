@@ -22,6 +22,7 @@ int switch_Motor = 0;
 int temp_PiscaEsq = 0;
 int temp_PiscaDir = 0;
 int temp_Alerta = 0;
+int temp_Sound = 0;
 
 //Guardam a direção do movimento do parabrisa, seja para esquerda ou pela direita
 int direcaoEsq = 0;

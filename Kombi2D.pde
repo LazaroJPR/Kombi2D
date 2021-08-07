@@ -22,7 +22,10 @@ int switch_Motor = 0;
 int temp_PiscaEsq = 0;
 int temp_PiscaDir = 0;
 int temp_Alerta = 0;
-int temp_Sound = 0;
+int temp_Motor = 0;
+
+//Contador que serve para marcar se o loop do motor foi ou nao ativado
+int contador = 0;
 
 //Guardam a direção do movimento do parabrisa, seja para esquerda ou pela direita
 int direcaoEsq = 0;
@@ -166,15 +169,18 @@ void keyTyped(){
     if(switch_Motor == 1){
       if(motorInicio.isPlaying()){
         motorInicio.pause();
+        temp_Motor = 0;
+        contador = 0;
       }
+      motorLoop.pause();
       motorFinal.play();
-      temp_Sound = 1;
       switch_Motor = 0;
     }
     else{
       motorInicio.play();
-      temp_Sound = 0;
-      switch_Motor = 1;  
+      temp_Motor = millis();
+      print("Tempo quando motor foi iniciado: ", temp_Motor);
+      switch_Motor = 1;
     }
   }
   if(key == 'b' || key == 'B'){
@@ -191,7 +197,12 @@ Haste haste = new Haste(0, 0);
 
 void draw(){
   background(255-(0.25*mouseX), 150, 150+(0.25*mouseY));
-
+  
+//If para contar quando tempo se passou desde o inicio do play do motorInicio ate o tempo necessario para dar play no motorLoop  
+  if(millis() > temp_Motor+14500 && millis() < temp_Motor+15000 && contador == 0){
+      motorLoop.loop();
+      contador = 1;
+  }
 //Rodas
 //--------------------------------------------------------
   //Roda esquerda

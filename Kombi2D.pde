@@ -179,7 +179,6 @@ void keyTyped(){
     else{
       motorInicio.play();
       temp_Motor = millis();
-      print("Tempo quando motor foi iniciado: ", temp_Motor);
       switch_Motor = 1;
     }
   }
